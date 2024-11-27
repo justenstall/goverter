@@ -598,7 +598,8 @@ func (g *generator) qualMethod(m *method.Definition) *jen.Statement {
 	switch {
 	case m.CustomCall != nil:
 		return m.CustomCall.Clone()
-	case g.conf.OutputFormat == config.FormatStruct && m.Generated:
+	case g.conf.OutputFormat == config.FormatStruct && m.Generated,
+		g.conf.OutputFormat == config.FormatMethod && m.Generated:
 		return jen.Id(xtype.ThisVar).Dot(m.Name)
 	case g.conf.OutputFormat == config.FormatFunction && m.Generated:
 		return jen.Id(m.Name)

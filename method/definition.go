@@ -20,6 +20,8 @@ type Definition struct {
 type Parameters struct {
 	TypeParams bool
 
+	SourceIsReceiver bool
+
 	Source       *xtype.Type
 	MultiSources []*xtype.Type
 	Target       *xtype.Type

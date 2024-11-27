@@ -22,6 +22,7 @@ const (
 	FormatStruct   Format = "struct"
 	FormatVariable Format = "assign-variable"
 	FormatFunction Format = "function"
+	FormatMethod   Format = "method"
 )
 
 var DefaultCommon = Common{
@@ -80,6 +81,7 @@ type ConverterConfig struct {
 	OutputPackagePath string
 	OutputPackageName string
 	OutputFormat      Format
+	OutputReceiver    string
 	Extend            []*method.Definition
 	Comments          []string
 }
@@ -168,17 +170,9 @@ func parseConverterLine(ctx *context, c *Converter, value string) (err error) {
 		if len(c.Extend) != 0 {
 			return fmt.Errorf("Cannot change output:format after extend functions have been added.\nMove the extend below the output:format setting.")
 		}
-
-		c.OutputFormat, err = parseEnum("format", false, rest, FormatFunction, FormatStruct, FormatVariable)
+		err = parseConverterFormatLine(c, rest)
 		if err != nil {
 			return err
-		}
-
-		if c.typ == nil && c.OutputFormat != FormatVariable {
-			return fmt.Errorf("unsupported format for goverter:variables")
-		}
-		if c.typ != nil && c.OutputFormat == FormatVariable {
-			return fmt.Errorf("unsupported format for goverter:converter")
 		}
 	case "output:package":
 		c.OutputPackageName = ""
@@ -222,4 +216,41 @@ func parseConverterLine(ctx *context, c *Converter, value string) (err error) {
 		_, err = parseCommon(&c.Common, cmd, rest)
 	}
 	return err
+}
+
+func parseConverterFormatLine(c *Converter, rest string) (err error) {
+	fields := strings.Fields(rest)
+	if len(fields) == 0 {
+		return nil
+	}
+
+	c.OutputFormat, err = parseEnum("format", false, fields[0], FormatFunction, FormatStruct, FormatVariable, FormatMethod)
+	if err != nil {
+		return err
+	}
+
+	switch c.OutputFormat {
+	case FormatFunction, FormatStruct:
+		if len(fields) != 1 {
+			return fmt.Errorf("invalid %s value: expected one value but got %d: %s", "format", len(fields), fields)
+		}
+	case FormatVariable:
+		if len(fields) != 1 {
+			return fmt.Errorf("invalid %s value: expected one value but got %d: %s", "format", len(fields), fields)
+		}
+		if c.typ == nil && c.OutputFormat != FormatVariable {
+			return fmt.Errorf("unsupported format for goverter:variables")
+		}
+		if c.typ != nil && c.OutputFormat == FormatVariable {
+			return fmt.Errorf("unsupported format for goverter:converter")
+		}
+	case FormatMethod:
+		if len(fields) != 2 {
+			return fmt.Errorf("invalid %s value: expected two values but got %d: %s", "format", len(fields), fields)
+		}
+		// Set the method receiver
+		c.OutputReceiver = fields[1]
+	}
+
+	return nil
 }

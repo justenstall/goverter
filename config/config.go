@@ -17,9 +17,10 @@ type RawConverter struct {
 	PackagePath   string
 	PackageName   string
 	InterfaceName string
-	Converter     RawLines
-	Methods       map[string]RawLines
-	FileName      string
+	// ReceiverName  string
+	Converter RawLines
+	Methods   map[string]RawLines
+	FileName  string
 }
 
 type Raw struct {
